@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 type ErrorResponse struct {
@@ -45,16 +47,17 @@ var httpClientG = &http.Client{
 
 func getENV(env string) string {
 	env_value := os.Getenv(env)
+
 	if env_value == "" {
 		fmt.Println("FATAL: NEED ENV", env)
 		fmt.Println("Exit...........")
 		os.Exit(2)
 	}
+
 	fmt.Println("ENV:", env, env_value)
+
 	return env_value
 }
-
-
 
 func trRequest(method string, url string, users Users) (*http.Response, error) {
 	var req *http.Request
@@ -64,10 +67,8 @@ func trRequest(method string, url string, users Users) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(users.Username,users.Password)
+	req.SetBasicAuth(users.Username, users.Password)
 	req.Header.Set("X-CSRF-Token", "1")
-	//req.Header.Set("Authorization", users)
-	//req.Header.Set("Content-Type", "application/json")
 
 	return tr.RoundTrip(req)
 
@@ -85,9 +86,22 @@ func getDFtoken(info string) string {
 	}
 
 	rstLs := strings.Split(tmpLs[1], "&")
+
 	if len(rstLs) == 0 {
 		return ""
 	}
+
 	return rstLs[0]
 
+}
+
+func Get(client *redis.Client, key string) *redis.StringCmd {
+	cmd := redis.NewStringCmd("get", key)
+	client.Process(cmd)
+	return cmd
+}
+func Setkey(client *redis.Client, key string, value string) *redis.StringCmd {
+	cmd := redis.NewStringCmd("set", key, value)
+	client.Process(cmd)
+	return cmd
 }

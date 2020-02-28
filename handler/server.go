@@ -1,9 +1,11 @@
 package handler
 
 import (
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
+
+	"code.cloudfoundry.org/lager"
 	"github.com/gin-gonic/gin"
+
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,16 +17,17 @@ var log lager.Logger
 var ssoHost, dfHost string
 
 func init() {
-	dfHost = getENV("DFHOST")
+	//dfHost = getENV("DFHOST")
 	log = lager.NewLogger("Token_Proxy")
 	log.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 }
 
 type Users struct {
 	Username string `json:"username"`
-	Password  string `json:"password"`
+	Password string `json:"password"`
 }
-func GetToken(c *gin.Context) {
+
+func Cluster(c *gin.Context) {
 
 	//token := getToken(c)
 	rBody, err := ioutil.ReadAll(c.Request.Body)
@@ -32,16 +35,14 @@ func GetToken(c *gin.Context) {
 		log.Error("CreateBC Read Request.Body error", err)
 	}
 	var user Users
-	_ = json.Unmarshal(rBody,&user)
+	_ = json.Unmarshal(rBody, &user)
 	//fmt.Printf("%#v\n",user)
 
 	//users :=c.Request.Header["Authorization"][0]
 
-
 	errorRsp := ErrorResponse{}
 
 	result := ""
-
 
 	dfRsp, err := trRequest("GET", "https://"+dfHost+"/oauth/authorize?client_id=openshift-challenging-client&response_type=token", user)
 
@@ -79,5 +80,3 @@ func GetToken(c *gin.Context) {
 	return
 
 }
-
-
